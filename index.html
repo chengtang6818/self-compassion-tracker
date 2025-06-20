@@ -4,32 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>自我关怀记录工具 - 破桔子心理工作室</title>
+    <!-- 引入 Lucide 图标库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
+    <!-- 引入 LeanCloud SDK -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leancloud-storage/4.15.0/av-min.js"></script>
     <style>
+        /* 全局样式重置 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        /* 基础页面样式 */
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            color: #2d3748;
         }
 
+        /* 主容器样式 */
         .container {
             max-width: 900px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
 
+        /* 头部样式 */
         .header {
             background: linear-gradient(135deg, #ff9a56 0%, #ffad56 100%);
             padding: 30px;
@@ -54,7 +61,8 @@
             opacity: 0.8;
             font-weight: 300;
         }
-
+        
+        /* 表单区域样式 */
         .form-section {
             padding: 40px;
         }
@@ -85,14 +93,15 @@
             outline: none;
             border-color: #ff9a56;
             background: white;
-            box-shadow: 0 0 0 3px rgba(255, 154, 86, 0.1);
+            box-shadow: 0 0 0 3px rgba(255, 154, 86, 0.2);
         }
 
         .form-group textarea {
             resize: vertical;
             min-height: 100px;
         }
-
+        
+        /* 情绪选择网格 */
         .emotion-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -120,8 +129,10 @@
             border-color: #ff9a56;
             background: #ff9a56;
             color: white;
+            font-weight: 600;
         }
-
+        
+        /* 情绪温度滑块 */
         .temperature-container {
             margin-top: 12px;
         }
@@ -136,6 +147,7 @@
         }
 
         .temperature-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
             appearance: none;
             width: 24px;
             height: 24px;
@@ -143,6 +155,7 @@
             background: white;
             cursor: pointer;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            border: 2px solid #ff9a56;
         }
 
         .temperature-display {
@@ -152,16 +165,11 @@
             font-weight: 600;
             color: #2d3748;
         }
-
+        
+        /* 分隔线 */
         .divider {
             height: 2px;
-            background: repeating-linear-gradient(
-                to right,
-                #cbd5e0 0,
-                #cbd5e0 10px,
-                transparent 10px,
-                transparent 20px
-            );
+            background: repeating-linear-gradient( to right, #cbd5e0 0, #cbd5e0 10px, transparent 10px, transparent 20px );
             margin: 40px 0;
             position: relative;
         }
@@ -169,15 +177,16 @@
         .divider::after {
             content: "转化为自我关怀";
             position: absolute;
-            top: -12px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            background: white;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.98);
             padding: 0 20px;
             color: #718096;
             font-weight: 600;
         }
-
+        
+        /* 按钮组 */
         .buttons {
             display: flex;
             gap: 15px;
@@ -193,7 +202,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
         }
@@ -218,32 +227,35 @@
             transform: translateY(-2px);
         }
 
+        /* 加载中状态 */
         .loading {
             opacity: 0.6;
             pointer-events: none;
         }
-
+        .loading i {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 同步状态提示 */
         .sync-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
+            text-align: center;
+            margin-top: 15px;
+            height: 20px;
             font-size: 14px;
             color: #718096;
         }
 
-        .sync-status.success {
-            color: #48bb78;
-        }
+        .sync-status.success { color: #48bb78; }
+        .sync-status.error { color: #f56565; }
 
-        .sync-status.error {
-            color: #f56565;
-        }
-
+        /* 记录展示区域 */
         .records-section {
             background: #f8fafc;
             padding: 40px;
-            margin-top: 20px;
         }
 
         .records-header {
@@ -253,10 +265,7 @@
             margin-bottom: 30px;
         }
 
-        .records-header h2 {
-            color: #2d3748;
-            font-size: 1.5rem;
-        }
+        .records-header h2 { color: #2d3748; font-size: 1.5rem; }
 
         .record-card {
             background: white;
@@ -264,109 +273,56 @@
             padding: 24px;
             margin-bottom: 20px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            border-left: 4px solid #ff9a56;
+            border-left: 5px solid #ff9a56;
+            transition: transform 0.2s ease;
+        }
+        .record-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.07);
         }
 
         .record-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
         }
 
-        .record-date {
-            color: #718096;
-            font-size: 14px;
-        }
+        .record-date { color: #718096; font-size: 14px; }
+        .record-actions { display: flex; gap: 10px; }
+        .record-actions i { cursor: pointer; color: #a0aec0; transition: color 0.2s; }
+        .record-actions i:hover { color: #e53e3e; }
 
         .record-content {
             display: grid;
-            grid-template-columns: 1fr auto 1fr;
+            grid-template-columns: 1fr;
             gap: 20px;
             align-items: start;
         }
 
-        .record-left, .record-right {
-            padding: 0 10px;
+        .record-part { padding: 10px 0; }
+        
+        .record-part:not(:last-child) {
+            border-bottom: 1px dashed #e2e8f0;
+            padding-bottom: 20px;
         }
 
-        .record-divider {
-            width: 2px;
-            height: 80px;
-            background: repeating-linear-gradient(
-                to bottom,
-                #cbd5e0 0,
-                #cbd5e0 5px,
-                transparent 5px,
-                transparent 10px
-            );
-            margin: 0 20px;
-        }
-
-        .record-label {
-            font-weight: 600;
-            color: #4a5568;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .record-text {
-            color: #2d3748;
-            line-height: 1.6;
-            margin-bottom: 12px;
-        }
-
-        .emotion-display {
-            display: inline-block;
-            background: #ff9a56;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            margin-right: 8px;
-        }
-
-        .temperature-display-small {
-            color: #718096;
-            font-size: 14px;
-        }
-
+        .record-label { font-weight: 600; color: #4a5568; margin-bottom: 8px; font-size: 14px; }
+        .record-text { color: #2d3748; line-height: 1.6; margin-bottom: 12px; word-break: break-word; }
+        .emotion-display-container { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .emotion-display { display: inline-block; background: #ffedd5; color: #c2410c; padding: 4px 12px; border-radius: 15px; font-size: 14px; font-weight: 500; }
+        .temperature-display-small { color: #718096; font-size: 14px; }
+        
+        /* 响应式设计 */
         @media (max-width: 768px) {
-            .container {
-                margin: 10px;
-                border-radius: 15px;
-            }
-            
-            .form-section {
-                padding: 20px;
-            }
-            
-            .emotion-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .buttons {
-                flex-direction: column;
-            }
-            
-            .record-content {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-            
-            .record-divider {
-                width: 100%;
-                height: 2px;
-                background: repeating-linear-gradient(
-                    to right,
-                    #cbd5e0 0,
-                    #cbd5e0 5px,
-                    transparent 5px,
-                    transparent 10px
-                );
-            }
+            body { padding: 0; }
+            .container { margin: 0; border-radius: 0; }
+            .form-section, .records-section { padding: 20px; }
+            .emotion-grid { grid-template-columns: repeat(2, 1fr); }
+            .buttons { flex-direction: column; }
         }
-
+        
+        /* 提示框 (Toast) 样式 */
         .toast {
             position: fixed;
             top: 20px;
@@ -375,12 +331,15 @@
             color: white;
             padding: 16px 24px;
             border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 1000;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
+            opacity: 0;
+            transform: translateX(120%);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         .toast.show {
+            opacity: 1;
             transform: translateX(0);
         }
     </style>
@@ -411,21 +370,6 @@
                         <div class="emotion-tag" data-emotion="失望">失望</div>
                         <div class="emotion-tag" data-emotion="孤独">孤独</div>
                         <div class="emotion-tag" data-emotion="无助">无助</div>
-                        <div class="emotion-tag" data-emotion="悲伤">悲伤</div>
-                        <div class="emotion-tag" data-emotion="疲惫">疲惫</div>
-                        <div class="emotion-tag" data-emotion="困惑">困惑</div>
-                        <div class="emotion-tag" data-emotion="烦躁">烦躁</div>
-                        <div class="emotion-tag" data-emotion="压抑">压抑</div>
-                        <div class="emotion-tag" data-emotion="内疚">内疚</div>
-                        <div class="emotion-tag" data-emotion="嫉妒">嫉妒</div>
-                        <div class="emotion-tag" data-emotion="绝望">绝望</div>
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <input type="text" id="customEmotion" placeholder="或者输入其他情绪..." style="margin-bottom: 10px;">
-                        <button type="button" class="btn btn-secondary" onclick="addCustomEmotion()" style="padding: 8px 16px; font-size: 14px;">
-                            <i data-lucide="plus"></i>
-                            添加情绪
-                        </button>
                     </div>
                 </div>
 
@@ -462,18 +406,18 @@
             <div class="records-header">
                 <h2>我的关怀记录</h2>
                 <div>
-                    <button class="btn btn-secondary" onclick="syncFromCloud()" id="syncBtn" style="margin-right: 10px;">
+                    <button class="btn btn-secondary" onclick="syncFromCloud()" id="syncBtn" style="padding: 10px 16px;">
                         <i data-lucide="refresh-ccw"></i>
-                        同步数据
+                        <span>同步</span>
                     </button>
-                    <button class="btn btn-secondary" onclick="downloadData()">
+                    <button class="btn btn-secondary" onclick="downloadData()" style="padding: 10px 16px; margin-left: 10px;">
                         <i data-lucide="download"></i>
-                        导出数据
+                        <span>导出</span>
                     </button>
                 </div>
             </div>
             <div id="recordsList">
-                <!-- 记录将在这里显示 -->
+                <!-- 记录将在这里动态生成 -->
             </div>
         </div>
     </div>
@@ -481,279 +425,268 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        // 初始化 LeanCloud
-        AV.init({
-            appId: '2qgZF4mb2HDX0DILL1LjblRp-gzGzoHsz',
-            appKey: '0domPBwUkclC1uutp7wZernT',
-            serverURL: 'https://2qgzf4mb.lc-cn-n1-shared.com'
-        });
-
-        // 初始化 Lucide 图标
-        lucide.createIcons();
-
+        // --- 全局变量和元素引用 ---
         let records = [];
         let selectedEmotion = '';
+        const temperatureSlider = document.getElementById('emotionTemperature');
+        const tempValueSpan = document.getElementById('tempValue');
+        const emotionGrid = document.querySelector('.emotion-grid');
+        const form = document.getElementById('compassionForm');
+        const recordsList = document.getElementById('recordsList');
+        const saveBtn = document.getElementById('saveBtn');
+        const syncBtn = document.getElementById('syncBtn');
+        const syncStatusDiv = document.getElementById('syncStatus');
 
-        // 页面加载时初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            loadRecords();
-            lucide.createIcons();
-        });
+        // 将用于存储 LeanCloud 表对象的变量放在顶层
+        let CompassionRecord;
 
-        // 从云端和本地加载记录
-        async function loadRecords() {
+        // --- 事件监听器 ---
+
+        // [FIXED] 页面加载完成后执行，确保所有脚本都已加载
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- LeanCloud 初始化 ---
+            // 只有在 DOM 加载完成后才初始化，确保 AV 对象已定义
             try {
-                // 先从云端加载
-                await syncFromCloud();
-            } catch (error) {
-                console.log('云端同步失败，从本地加载:', error);
-                // 如果云端加载失败，从本地加载
-                records = JSON.parse(localStorage.getItem('compassionRecords') || '[]');
-                displayRecords();
-            }
-        }
-
-        // 从云端同步数据
-        async function syncFromCloud() {
-            const syncBtn = document.getElementById('syncBtn');
-            const syncStatus = document.getElementById('syncStatus');
-            
-            try {
-                syncBtn.classList.add('loading');
-                syncStatus.innerHTML = '<i data-lucide="loader-2"></i> 同步中...';
-                syncStatus.className = 'sync-status';
-                
-                const query = new AV.Query('CompassionRecord');
-                query.descending('createdAt');
-                query.limit(100); // 限制最近100条记录
-                
-                const cloudRecords = await query.find();
-                records = cloudRecords.map(record => ({
-                    id: record.get('recordId') || record.id,
-                    date: record.get('recordDate') || record.createdAt.toLocaleString('zh-CN'),
-                    selfCriticism: record.get('selfCriticism'),
-                    emotion: record.get('emotion'),
-                    temperature: record.get('temperature'),
-                    selfCompassion: record.get('selfCompassion'),
-                    cloudId: record.id
-                }));
-                
-                // 同步到本地存储
-                localStorage.setItem('compassionRecords', JSON.stringify(records));
-                
-                displayRecords();
-                syncStatus.innerHTML = '<i data-lucide="check"></i> 同步成功';
-                syncStatus.className = 'sync-status success';
-                
-            } catch (error) {
-                console.error('同步失败:', error);
-                syncStatus.innerHTML = '<i data-lucide="alert-circle"></i> 同步失败，使用本地数据';
-                syncStatus.className = 'sync-status error';
-                
-                // 从本地加载
-                records = JSON.parse(localStorage.getItem('compassionRecords') || '[]');
-                displayRecords();
-            } finally {
-                syncBtn.classList.remove('loading');
-                setTimeout(() => {
-                    syncStatus.innerHTML = '';
-                    syncStatus.className = 'sync-status';
-                    lucide.createIcons();
-                }, 3000);
-            }
-        }
-
-        // 保存到云端
-        async function saveToCloud(record) {
-            try {
-                const CompassionRecord = AV.Object.extend('CompassionRecord');
-                const compassionRecord = new CompassionRecord();
-                
-                compassionRecord.set('recordId', record.id);
-                compassionRecord.set('recordDate', record.date);
-                compassionRecord.set('selfCriticism', record.selfCriticism);
-                compassionRecord.set('emotion', record.emotion);
-                compassionRecord.set('temperature', parseInt(record.temperature));
-                compassionRecord.set('selfCompassion', record.selfCompassion);
-                
-                const savedRecord = await compassionRecord.save();
-                record.cloudId = savedRecord.id;
-                
-                return true;
-            } catch (error) {
-                console.error('云端保存失败:', error);
-                return false;
-            }
-        }
-
-        // 添加自定义情绪
-        function addCustomEmotion() {
-            const customInput = document.getElementById('customEmotion');
-            const emotion = customInput.value.trim();
-            
-            if (!emotion) {
-                showToast('请输入情绪名称', 'error');
+                AV.init({
+                    appId: '2qgZF4mb2HDX0DILL1LjblRp-gzGzoHsz',
+                    appKey: '0domPBwUkclC1uutp7wZernT',
+                    serverURL: 'https://2qgzf4mb.lc-cn-n1-shared.com'
+                });
+                // 初始化完成后，将表对象赋值给全局变量
+                CompassionRecord = AV.Object.extend('CompassionRecord');
+            } catch (e) {
+                console.error("LeanCloud SDK 初始化失败: ", e);
+                showToast("数据服务加载失败，请刷新页面重试。", "error");
+                // 如果初始化失败，则停止后续操作
                 return;
             }
             
-            // 检查是否已存在
-            const existingTags = document.querySelectorAll('.emotion-tag');
-            for (let tag of existingTags) {
-                if (tag.dataset.emotion === emotion) {
-                    showToast('这个情绪已经存在了', 'error');
-                    return;
-                }
-            }
-            
-            // 创建新的情绪标签
-            const emotionGrid = document.querySelector('.emotion-grid');
-            const newTag = document.createElement('div');
-            newTag.className = 'emotion-tag custom-emotion';
-            newTag.dataset.emotion = emotion;
-            newTag.textContent = emotion;
-            
-            // 添加点击事件
-            newTag.addEventListener('click', function() {
-                document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedEmotion = this.dataset.emotion;
-            });
-            
-            emotionGrid.appendChild(newTag);
-            customInput.value = '';
-            
-            // 自动选中新添加的情绪
-            document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('selected'));
-            newTag.classList.add('selected');
-            selectedEmotion = emotion;
-            
-            showToast('情绪已添加并选中！', 'success');
-        }
+            // 初始化数据和图标
+            loadInitialData();
+            lucide.createIcons();
+        });
 
-        // 情绪选择事件
-        document.addEventListener('click', function(e) {
+        // 情绪选择事件 (使用事件委托)
+        emotionGrid.addEventListener('click', (e) => {
             if (e.target.classList.contains('emotion-tag')) {
-                document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('selected'));
+                emotionGrid.querySelectorAll('.emotion-tag').forEach(tag => tag.classList.remove('selected'));
                 e.target.classList.add('selected');
                 selectedEmotion = e.target.dataset.emotion;
             }
         });
 
-        // 回车键添加自定义情绪
-        document.getElementById('customEmotion').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addCustomEmotion();
-            }
+        // 滑块值变化事件
+        temperatureSlider.addEventListener('input', () => {
+            tempValueSpan.textContent = temperatureSlider.value;
         });
 
-        // 温度滑块
-        const temperatureSlider = document.getElementById('emotionTemperature');
-        const tempValue = document.getElementById('tempValue');
-        
-        temperatureSlider.addEventListener('input', function() {
-            tempValue.textContent = this.value;
-        });
-
-        // 表单提交
-        document.getElementById('compassionForm').addEventListener('submit', async function(e) {
+        // 表单提交事件
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             if (!selectedEmotion) {
-                showToast('请选择一个情绪', 'error');
+                showToast('请先选择一个情绪', 'error');
+                return;
+            }
+            
+            // 检查 CompassionRecord 是否已成功初始化
+            if (!CompassionRecord) {
+                showToast('数据服务未准备好，请稍后重试', 'error');
                 return;
             }
 
-            const saveBtn = document.getElementById('saveBtn');
-            const syncStatus = document.getElementById('syncStatus');
-            
+            setLoading(saveBtn, true);
+            setSyncStatus('保存中...', 'loading');
+
+            const record = {
+                id: `local-${Date.now()}`,
+                date: new Date().toLocaleString('zh-CN'),
+                selfCriticism: document.getElementById('selfCriticism').value,
+                emotion: selectedEmotion,
+                temperature: parseInt(temperatureSlider.value),
+                selfCompassion: document.getElementById('selfCompassion').value,
+                cloudId: null
+            };
+
             try {
-                saveBtn.classList.add('loading');
-                syncStatus.innerHTML = '<i data-lucide="loader-2"></i> 保存中...';
-                syncStatus.className = 'sync-status';
+                const savedCloudRecord = await saveToCloud(record);
+                record.cloudId = savedCloudRecord.id;
+                record.id = savedCloudRecord.id;
+                
+                showToast('记录已成功保存到云端！');
+                setSyncStatus('保存成功', 'success');
 
-                const record = {
-                    id: Date.now(),
-                    date: new Date().toLocaleString('zh-CN'),
-                    selfCriticism: document.getElementById('selfCriticism').value,
-                    emotion: selectedEmotion,
-                    temperature: temperatureSlider.value,
-                    selfCompassion: document.getElementById('selfCompassion').value
-                };
-
-                // 先保存到本地
-                records.unshift(record);
-                localStorage.setItem('compassionRecords', JSON.stringify(records));
-                
-                // 尝试保存到云端
-                const cloudSaved = await saveToCloud(record);
-                
-                if (cloudSaved) {
-                    // 更新本地存储中的cloudId
-                    localStorage.setItem('compassionRecords', JSON.stringify(records));
-                    syncStatus.innerHTML = '<i data-lucide="check"></i> 已保存到云端';
-                    syncStatus.className = 'sync-status success';
-                } else {
-                    syncStatus.innerHTML = '<i data-lucide="wifi-off"></i> 已保存到本地，稍后同步';
-                    syncStatus.className = 'sync-status error';
-                }
-                
-                showToast('记录已保存！', 'success');
-                clearForm();
-                displayRecords();
-                
             } catch (error) {
-                console.error('保存失败:', error);
-                showToast('保存失败，请重试', 'error');
-                syncStatus.innerHTML = '<i data-lucide="alert-circle"></i> 保存失败';
-                syncStatus.className = 'sync-status error';
+                console.error('云端保存失败，已保存到本地:', error);
+                showToast('云端同步失败，记录已保存到本地', 'warning');
+                setSyncStatus('已离线保存', 'error');
             } finally {
-                saveBtn.classList.remove('loading');
-                setTimeout(() => {
-                    syncStatus.innerHTML = '';
-                    syncStatus.className = 'sync-status';
-                    lucide.createIcons();
-                }, 3000);
+                records.unshift(record);
+                saveToLocal();
+                displayRecords();
+                clearForm();
+                setLoading(saveBtn, false);
+                setTimeout(() => setSyncStatus(''), 3000);
             }
         });
 
-        // 清空表单
-        function clearForm() {
-            document.getElementById('compassionForm').reset();
-            document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('selected'));
-            // 移除自定义添加的情绪标签
-            document.querySelectorAll('.custom-emotion').forEach(tag => tag.remove());
-            selectedEmotion = '';
-            tempValue.textContent = '5';
+        // --- 功能函数 ---
+        
+        // 页面首次加载数据
+        async function loadInitialData() {
+            loadFromLocal();
+            displayRecords();
+            await syncFromCloud();
         }
 
-        // 显示记录
+        // 从云端同步数据
+        async function syncFromCloud() {
+            if (!CompassionRecord) return; // 如果服务未初始化，则不执行
+            setLoading(syncBtn, true);
+            setSyncStatus('正在从云端同步...', 'loading');
+            try {
+                const query = new AV.Query(CompassionRecord);
+                query.descending('createdAt');
+                query.limit(500);
+                const cloudRecords = await query.find();
+
+                const localRecords = JSON.parse(localStorage.getItem('compassionRecords') || '[]');
+                const cloudIds = new Set(cloudRecords.map(r => r.id));
+                
+                const formattedCloudRecords = cloudRecords.map(record => ({
+                    id: record.id,
+                    cloudId: record.id,
+                    date: record.get('recordDate') || record.createdAt.toLocaleString('zh-CN'),
+                    selfCriticism: record.get('selfCriticism'),
+                    emotion: record.get('emotion'),
+                    temperature: record.get('temperature'),
+                    selfCompassion: record.get('selfCompassion')
+                }));
+
+                const localOnlyRecords = localRecords.filter(r => !cloudIds.has(r.cloudId));
+                const mergedRecords = [...formattedCloudRecords, ...localOnlyRecords];
+                records = mergedRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                saveToLocal();
+                displayRecords();
+                setSyncStatus('数据同步成功', 'success');
+                showToast('数据已同步');
+
+                uploadOfflineRecords();
+
+            } catch (error) {
+                console.error('从云端同步失败:', error);
+                setSyncStatus('同步失败，请检查网络', 'error');
+                showToast('同步失败，请检查网络', 'error');
+            } finally {
+                setLoading(syncBtn, false);
+                setTimeout(() => setSyncStatus(''), 3000);
+            }
+        }
+
+        // 上传离线记录
+        async function uploadOfflineRecords() {
+            if (!CompassionRecord) return;
+            const offlineRecords = records.filter(r => !r.cloudId);
+            if (offlineRecords.length === 0) return;
+
+            showToast(`正在上传 ${offlineRecords.length} 条离线记录...`);
+            for (const record of offlineRecords) {
+                try {
+                    const savedCloudRecord = await saveToCloud(record);
+                    const index = records.findIndex(r => r.id === record.id);
+                    if (index !== -1) {
+                        records[index].cloudId = savedCloudRecord.id;
+                        records[index].id = savedCloudRecord.id;
+                    }
+                } catch (error) {
+                    console.error(`上传离线记录 ${record.id} 失败:`, error);
+                }
+            }
+            saveToLocal();
+            displayRecords();
+        }
+
+        // 保存到 LeanCloud
+        function saveToCloud(record) {
+            const newRecord = new CompassionRecord();
+            newRecord.set('recordDate', record.date);
+            newRecord.set('selfCriticism', record.selfCriticism);
+            newRecord.set('emotion', record.emotion);
+            newRecord.set('temperature', record.temperature);
+            newRecord.set('selfCompassion', record.selfCompassion);
+            return newRecord.save();
+        }
+
+        // 删除记录
+        async function deleteRecord(recordId) {
+            if (!CompassionRecord) return;
+            if (!confirm('确定要删除这条记录吗？删除后无法恢复。')) {
+                return;
+            }
+
+            try {
+                if (!recordId.startsWith('local-')) {
+                    const recordToDelete = AV.Object.createWithoutData('CompassionRecord', recordId);
+                    await recordToDelete.destroy();
+                }
+
+                records = records.filter(r => r.id !== recordId);
+                saveToLocal();
+                displayRecords();
+                showToast('记录已删除');
+
+            } catch (error) {
+                console.error('删除失败:', error);
+                showToast('删除失败，请稍后重试', 'error');
+            }
+        }
+        
+        // 保存到本地存储
+        function saveToLocal() {
+            localStorage.setItem('compassionRecords', JSON.stringify(records));
+        }
+
+        // 从本地存储加载
+        function loadFromLocal() {
+            records = JSON.parse(localStorage.getItem('compassionRecords') || '[]');
+        }
+
+        // 清空表单
+        function clearForm() {
+            form.reset();
+            emotionGrid.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('selected'));
+            selectedEmotion = '';
+            temperatureSlider.value = 5;
+            tempValueSpan.textContent = '5';
+        }
+
+        // 渲染记录列表
         function displayRecords() {
-            const recordsList = document.getElementById('recordsList');
-            
             if (records.length === 0) {
-                recordsList.innerHTML = '<div style="text-align: center; color: #718096; padding: 40px;">还没有记录，开始你的自我关怀之旅吧！</div>';
+                recordsList.innerHTML = '<div style="text-align: center; color: #718096; padding: 40px 0;">还没有记录，开始你的自我关怀之旅吧！</div>';
                 return;
             }
 
             recordsList.innerHTML = records.map(record => `
-                <div class="record-card">
+                <div class="record-card" data-id="${record.id}">
                     <div class="record-header">
                         <div class="record-date">${record.date}</div>
-                        ${record.cloudId ? '<i data-lucide="cloud" style="color: #48bb78; width: 16px; height: 16px;"></i>' : '<i data-lucide="hard-drive" style="color: #718096; width: 16px; height: 16px;"></i>'}
+                        <div class="record-actions">
+                            ${record.cloudId ? '<i data-lucide="cloud" style="color: #48bb78; width: 16px; height: 16px;" title="已同步到云端"></i>' : '<i data-lucide="hard-drive" style="color: #f6ad55; width: 16px; height: 16px;" title="仅保存在本地"></i>'}
+                            <i data-lucide="trash-2" style="width: 16px; height: 16px;" onclick="deleteRecord('${record.id}')" title="删除记录"></i>
+                        </div>
                     </div>
                     <div class="record-content">
-                        <div class="record-left">
-                            <div class="record-label">自我批评</div>
+                        <div class="record-part">
+                            <div class="record-label">自我批评 &amp; 情绪</div>
                             <div class="record-text">${record.selfCriticism}</div>
-                            <div class="record-label">情绪与温度</div>
-                            <div>
+                            <div class="emotion-display-container">
                                 <span class="emotion-display">${record.emotion}</span>
                                 <span class="temperature-display-small">温度: ${record.temperature}</span>
                             </div>
                         </div>
-                        <div class="record-divider"></div>
-                        <div class="record-right">
+                        <div class="record-part">
                             <div class="record-label">自我关怀</div>
                             <div class="record-text">${record.selfCompassion}</div>
                         </div>
@@ -761,34 +694,72 @@
                 </div>
             `).join('');
             
-            // 重新初始化图标
             lucide.createIcons();
         }
 
-        // 下载数据
+        // 下载数据为 JSON 文件
         function downloadData() {
+            if (records.length === 0) {
+                showToast('当前没有记录可导出', 'warning');
+                return;
+            }
             const dataStr = JSON.stringify(records, null, 2);
             const dataBlob = new Blob([dataStr], {type: 'application/json'});
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
             link.href = url;
             link.download = `自我关怀记录_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
             URL.revokeObjectURL(url);
-            showToast('数据已导出！', 'success');
+            showToast('数据已开始导出！');
         }
+        
+        // --- UI 辅助函数 ---
 
         // 显示提示信息
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
-            toast.style.background = type === 'success' ? '#48bb78' : '#f56565';
+            toast.className = 'toast';
+            if (type === 'error') {
+                toast.style.background = '#f56565';
+            } else if (type === 'warning') {
+                toast.style.background = '#f6ad55';
+            } else {
+                toast.style.background = '#48bb78';
+            }
             toast.classList.add('show');
             
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
         }
+
+        // 设置按钮加载状态
+        function setLoading(button, isLoading) {
+            const icon = button.querySelector('i');
+            if (!icon) return;
+            const originalIcon = icon.dataset.lucide || 'heart';
+            if (isLoading) {
+                button.classList.add('loading');
+                button.disabled = true;
+                icon.setAttribute('data-lucide', 'loader-2');
+            } else {
+                button.classList.remove('loading');
+                button.disabled = false;
+                icon.setAttribute('data-lucide', originalIcon);
+            }
+            lucide.createIcons();
+        }
+
+        // 设置同步状态文本
+        function setSyncStatus(text, statusClass = '') {
+            syncStatusDiv.textContent = text;
+            syncStatusDiv.className = `sync-status ${statusClass}`;
+        }
+
     </script>
 </body>
 </html>
