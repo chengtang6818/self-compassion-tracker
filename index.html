@@ -104,7 +104,7 @@
         /* 情绪选择网格 */
         .emotion-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
             gap: 12px;
             margin-top: 12px;
         }
@@ -370,6 +370,21 @@
                         <div class="emotion-tag" data-emotion="失望">失望</div>
                         <div class="emotion-tag" data-emotion="孤独">孤独</div>
                         <div class="emotion-tag" data-emotion="无助">无助</div>
+                        <div class="emotion-tag" data-emotion="悲伤">悲伤</div>
+                        <div class="emotion-tag" data-emotion="疲惫">疲惫</div>
+                        <div class="emotion-tag" data-emotion="困惑">困惑</div>
+                        <div class="emotion-tag" data-emotion="烦躁">烦躁</div>
+                        <div class="emotion-tag" data-emotion="压抑">压抑</div>
+                        <div class="emotion-tag" data-emotion="内疚">内疚</div>
+                        <div class="emotion-tag" data-emotion="嫉妒">嫉妒</div>
+                        <div class="emotion-tag" data-emotion="绝望">绝望</div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <input type="text" id="customEmotion" placeholder="或者输入其他情绪，按回车或点按钮添加">
+                        <button type="button" class="btn btn-secondary" onclick="addCustomEmotion()" style="padding: 10px 16px; font-size: 14px; margin-top: 10px;">
+                            <i data-lucide="plus"></i>
+                            添加情绪
+                        </button>
                     </div>
                 </div>
 
@@ -436,37 +451,31 @@
         const saveBtn = document.getElementById('saveBtn');
         const syncBtn = document.getElementById('syncBtn');
         const syncStatusDiv = document.getElementById('syncStatus');
+        const customEmotionInput = document.getElementById('customEmotion');
 
-        // 将用于存储 LeanCloud 表对象的变量放在顶层
         let CompassionRecord;
 
         // --- 事件监听器 ---
 
-        // [FIXED] 页面加载完成后执行，确保所有脚本都已加载
         document.addEventListener('DOMContentLoaded', () => {
-            // --- LeanCloud 初始化 ---
-            // 只有在 DOM 加载完成后才初始化，确保 AV 对象已定义
             try {
+                // [UPDATED] 已将此处的密钥更新为您提供的信息
                 AV.init({
                     appId: '2qgZF4mb2HDX0DILL1LjblRp-gzGzoHsz',
                     appKey: '0domPBwUkclC1uutp7wZernT',
                     serverURL: 'https://2qgzf4mb.lc-cn-n1-shared.com'
                 });
-                // 初始化完成后，将表对象赋值给全局变量
                 CompassionRecord = AV.Object.extend('CompassionRecord');
             } catch (e) {
                 console.error("LeanCloud SDK 初始化失败: ", e);
                 showToast("数据服务加载失败，请刷新页面重试。", "error");
-                // 如果初始化失败，则停止后续操作
                 return;
             }
             
-            // 初始化数据和图标
             loadInitialData();
             lucide.createIcons();
         });
 
-        // 情绪选择事件 (使用事件委托)
         emotionGrid.addEventListener('click', (e) => {
             if (e.target.classList.contains('emotion-tag')) {
                 emotionGrid.querySelectorAll('.emotion-tag').forEach(tag => tag.classList.remove('selected'));
@@ -475,12 +484,10 @@
             }
         });
 
-        // 滑块值变化事件
         temperatureSlider.addEventListener('input', () => {
             tempValueSpan.textContent = temperatureSlider.value;
         });
 
-        // 表单提交事件
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -489,7 +496,6 @@
                 return;
             }
             
-            // 检查 CompassionRecord 是否已成功初始化
             if (!CompassionRecord) {
                 showToast('数据服务未准备好，请稍后重试', 'error');
                 return;
@@ -529,19 +535,52 @@
                 setTimeout(() => setSyncStatus(''), 3000);
             }
         });
+        
+        customEmotionInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); 
+                addCustomEmotion();
+            }
+        });
 
         // --- 功能函数 ---
+
+        function addCustomEmotion() {
+            const emotion = customEmotionInput.value.trim();
+            if (!emotion) {
+                showToast('请输入情绪名称', 'error');
+                return;
+            }
+
+            const existingTags = document.querySelectorAll('.emotion-tag');
+            for (let tag of existingTags) {
+                if (tag.dataset.emotion.toLowerCase() === emotion.toLowerCase()) {
+                    showToast('这个情绪已经有了，已帮你选中', 'warning');
+                    tag.click(); 
+                    customEmotionInput.value = '';
+                    return;
+                }
+            }
+
+            const newTag = document.createElement('div');
+            newTag.className = 'emotion-tag custom-emotion'; 
+            newTag.dataset.emotion = emotion;
+            newTag.textContent = emotion;
+            emotionGrid.appendChild(newTag);
+
+            customEmotionInput.value = '';
+            newTag.click(); 
+            showToast('新情绪已添加并选中！');
+        }
         
-        // 页面首次加载数据
         async function loadInitialData() {
             loadFromLocal();
             displayRecords();
             await syncFromCloud();
         }
 
-        // 从云端同步数据
         async function syncFromCloud() {
-            if (!CompassionRecord) return; // 如果服务未初始化，则不执行
+            if (!CompassionRecord) return;
             setLoading(syncBtn, true);
             setSyncStatus('正在从云端同步...', 'loading');
             try {
@@ -584,7 +623,6 @@
             }
         }
 
-        // 上传离线记录
         async function uploadOfflineRecords() {
             if (!CompassionRecord) return;
             const offlineRecords = records.filter(r => !r.cloudId);
@@ -607,7 +645,6 @@
             displayRecords();
         }
 
-        // 保存到 LeanCloud
         function saveToCloud(record) {
             const newRecord = new CompassionRecord();
             newRecord.set('recordDate', record.date);
@@ -618,7 +655,6 @@
             return newRecord.save();
         }
 
-        // 删除记录
         async function deleteRecord(recordId) {
             if (!CompassionRecord) return;
             if (!confirm('确定要删除这条记录吗？删除后无法恢复。')) {
@@ -642,26 +678,23 @@
             }
         }
         
-        // 保存到本地存储
         function saveToLocal() {
             localStorage.setItem('compassionRecords', JSON.stringify(records));
         }
 
-        // 从本地存储加载
         function loadFromLocal() {
             records = JSON.parse(localStorage.getItem('compassionRecords') || '[]');
         }
 
-        // 清空表单
         function clearForm() {
             form.reset();
             emotionGrid.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('selected'));
+            emotionGrid.querySelectorAll('.custom-emotion').forEach(tag => tag.remove());
             selectedEmotion = '';
             temperatureSlider.value = 5;
             tempValueSpan.textContent = '5';
         }
 
-        // 渲染记录列表
         function displayRecords() {
             if (records.length === 0) {
                 recordsList.innerHTML = '<div style="text-align: center; color: #718096; padding: 40px 0;">还没有记录，开始你的自我关怀之旅吧！</div>';
@@ -697,7 +730,6 @@
             lucide.createIcons();
         }
 
-        // 下载数据为 JSON 文件
         function downloadData() {
             if (records.length === 0) {
                 showToast('当前没有记录可导出', 'warning');
@@ -718,7 +750,6 @@
         
         // --- UI 辅助函数 ---
 
-        // 显示提示信息
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
@@ -737,7 +768,6 @@
             }, 3000);
         }
 
-        // 设置按钮加载状态
         function setLoading(button, isLoading) {
             const icon = button.querySelector('i');
             if (!icon) return;
@@ -754,7 +784,6 @@
             lucide.createIcons();
         }
 
-        // 设置同步状态文本
         function setSyncStatus(text, statusClass = '') {
             syncStatusDiv.textContent = text;
             syncStatusDiv.className = `sync-status ${statusClass}`;
