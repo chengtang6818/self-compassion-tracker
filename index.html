@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>自我关怀记录工具 - 破桔子心理工作室</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leancloud-storage/4.15.0/av-min.js"></script>
+    <!-- LeanCloud 官方推荐的 CDN -->
+    <script src="https://unpkg.com/leancloud-storage/dist/av-min.js"></script>
     <style>
         * {
             margin: 0;
@@ -71,7 +72,7 @@
             font-size: 1.1rem;
         }
 
-        .form-group input, .form-group textarea, .form-group select {
+        .form-group input, .form-group textarea {
             width: 100%;
             padding: 16px;
             border: 2px solid #e2e8f0;
@@ -81,7 +82,7 @@
             background: #f8fafc;
         }
 
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+        .form-group input:focus, .form-group textarea:focus {
             outline: none;
             border-color: #ff9a56;
             background: white;
@@ -92,16 +93,65 @@
             resize: vertical;
             min-height: 100px;
         }
-        
-        .form-group select {
+
+        .emotion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .emotion-tag {
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            font-weight: 500;
+        }
+
+        .emotion-tag:hover {
+            border-color: #ff9a56;
+            background: #fff5f0;
+        }
+
+        .emotion-tag.selected {
+            border-color: #ff9a56;
+            background: #ff9a56;
+            color: white;
+        }
+
+        .temperature-container {
+            margin-top: 12px;
+        }
+
+        .temperature-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #4299e1, #f6ad55, #f56565);
+            outline: none;
             -webkit-appearance: none;
-            -moz-appearance: none;
+        }
+
+        .temperature-slider::-webkit-slider-thumb {
             appearance: none;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 1rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .temperature-display {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
         }
 
         .divider {
@@ -220,7 +270,7 @@
 
         .record-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: between;
             align-items: center;
             margin-bottom: 15px;
         }
@@ -292,6 +342,10 @@
                 padding: 20px;
             }
             
+            .emotion-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
             .buttons {
                 flex-direction: column;
             }
@@ -347,27 +401,41 @@
                     <textarea id="selfCriticism" placeholder="记录下你内心的自我批评声音..." required></textarea>
                 </div>
 
-                <!-- Simplified Emotion Input -->
                 <div class="form-group">
-                    <label for="emotionInput">对应的情绪</label>
-                    <input type="text" id="emotionInput" placeholder="例如：焦虑、沮丧、疲惫..." required>
+                    <label>对应的情绪</label>
+                    <div class="emotion-grid">
+                        <div class="emotion-tag" data-emotion="愤怒">愤怒</div>
+                        <div class="emotion-tag" data-emotion="焦虑">焦虑</div>
+                        <div class="emotion-tag" data-emotion="沮丧">沮丧</div>
+                        <div class="emotion-tag" data-emotion="羞愧">羞愧</div>
+                        <div class="emotion-tag" data-emotion="恐惧">恐惧</div>
+                        <div class="emotion-tag" data-emotion="失望">失望</div>
+                        <div class="emotion-tag" data-emotion="孤独">孤独</div>
+                        <div class="emotion-tag" data-emotion="无助">无助</div>
+                        <div class="emotion-tag" data-emotion="悲伤">悲伤</div>
+                        <div class="emotion-tag" data-emotion="疲惫">疲惫</div>
+                        <div class="emotion-tag" data-emotion="困惑">困惑</div>
+                        <div class="emotion-tag" data-emotion="烦躁">烦躁</div>
+                        <div class="emotion-tag" data-emotion="压抑">压抑</div>
+                        <div class="emotion-tag" data-emotion="内疚">内疚</div>
+                        <div class="emotion-tag" data-emotion="嫉妒">嫉妒</div>
+                        <div class="emotion-tag" data-emotion="绝望">绝望</div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <input type="text" id="customEmotion" placeholder="或者输入其他情绪..." style="margin-bottom: 10px;">
+                        <button type="button" class="btn btn-secondary" onclick="addCustomEmotion()" style="padding: 8px 16px; font-size: 14px;">
+                            <i data-lucide="plus"></i>
+                            添加情绪
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Simplified Temperature Selection -->
                 <div class="form-group">
-                    <label for="emotionTemperature">情绪温度 (1-10)</label>
-                    <select id="emotionTemperature" required>
-                        <option value="1">1 - 非常轻微</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5" selected>5 - 中等</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                        <option value="9">9</option>
-                        <option value="10">10 - 非常强烈</option>
-                    </select>
+                    <label>情绪温度 (1-10)</label>
+                    <div class="temperature-container">
+                        <input type="range" id="emotionTemperature" class="temperature-slider" min="1" max="10" value="5">
+                        <div class="temperature-display">温度: <span id="tempValue">5</span></div>
+                    </div>
                 </div>
 
                 <div class="divider"></div>
@@ -406,7 +474,7 @@
                 </div>
             </div>
             <div id="recordsList">
-                <!-- Records will be displayed here -->
+                <!-- 记录将在这里显示 -->
             </div>
         </div>
     </div>
@@ -414,75 +482,56 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        // --- Global Variables ---
-        let records = [];
-
-        // --- Main Application Logic ---
-        document.addEventListener('DOMContentLoaded', function() {
-            function initializeApp() {
-                if (typeof AV !== 'undefined' && typeof lucide !== 'undefined') {
-                    try {
-                        AV.init({
-                            appId: 'o1luUdpDLe9Us4aLKd85NyRE-MdYXbMMI',
-                            appKey: 'AmDdEqBIHczOw5Sm0trY5Zsi',
-                            serverURL: 'https://o1luudpd.api.lncldglobal.com'
-                        });
-
-                        lucide.createIcons();
-                        
-                        const compassionForm = document.getElementById('compassionForm');
-                        if (compassionForm) {
-                            compassionForm.addEventListener('submit', handleFormSubmit);
-                        }
-
-                        loadRecords();
-
-                    } catch (error) {
-                        console.error("Critical error during page initialization:", error);
-                        const syncStatus = document.getElementById('syncStatus');
-                        if(syncStatus) {
-                            syncStatus.innerHTML = '<i data-lucide="alert-triangle"></i> 页面初始化失败，请刷新。';
-                            syncStatus.className = 'sync-status error';
-                            try { lucide.createIcons(); } catch (e) {}
-                        }
-                    }
-                } else {
-                    setTimeout(initializeApp, 100);
-                }
-            }
-            initializeApp();
+        // 初始化 LeanCloud
+        AV.init({
+            appId: '2qgZF4mb2HDX0DILL1LjblRp-gzGzoHsz',
+            appKey: '0domPBwUkclC1uutp7wZernT',
+            serverURL: 'https://2qgzf4mb.lc-cn-n1-shared.com'
         });
-        
-        // --- Data Handling Functions ---
 
+        // 初始化 Lucide 图标
+        lucide.createIcons();
+
+        let records = [];
+        let selectedEmotion = '';
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRecords();
+            lucide.createIcons();
+        });
+
+        // 从云端和本地加载记录
         async function loadRecords() {
             try {
+                // 先从云端加载
                 await syncFromCloud();
             } catch (error) {
-                console.log('Loading from local backup due to sync failure.');
+                console.log('云端同步失败，从本地加载:', error);
+                // 如果云端加载失败，从本地加载
                 records = JSON.parse(localStorage.getItem('compassionRecords') || '[]');
                 displayRecords();
             }
         }
 
+        // 从云端同步数据
         async function syncFromCloud() {
             const syncBtn = document.getElementById('syncBtn');
             const syncStatus = document.getElementById('syncStatus');
             
-            syncBtn.classList.add('loading');
-            syncStatus.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> 同步中...';
-            lucide.createIcons();
-            syncStatus.className = 'sync-status';
-            
             try {
+                syncBtn.classList.add('loading');
+                syncStatus.innerHTML = '<i data-lucide="loader-2"></i> 同步中...';
+                syncStatus.className = 'sync-status';
+                
                 const query = new AV.Query('CompassionRecord');
                 query.descending('createdAt');
-                query.limit(100);
+                query.limit(100); // 限制最近100条记录
                 
                 const cloudRecords = await query.find();
                 records = cloudRecords.map(record => ({
                     id: record.get('recordId') || record.id,
-                    date: record.get('recordDate') || new Date(record.createdAt).toLocaleString('zh-CN'),
+                    date: record.get('recordDate') || record.createdAt.toLocaleString('zh-CN'),
                     selfCriticism: record.get('selfCriticism'),
                     emotion: record.get('emotion'),
                     temperature: record.get('temperature'),
@@ -490,146 +539,200 @@
                     cloudId: record.id
                 }));
                 
+                // 同步到本地存储
                 localStorage.setItem('compassionRecords', JSON.stringify(records));
+                
                 displayRecords();
                 syncStatus.innerHTML = '<i data-lucide="check"></i> 同步成功';
                 syncStatus.className = 'sync-status success';
                 
             } catch (error) {
-                console.error('数据服务加载失败，详细信息:', error);
-                let errorMessage = '数据服务加载失败。';
-                if (error.code) {
-                    switch(error.code) {
-                        case -1: errorMessage += ' 原因: 网络连接超时，请检查网络。'; break;
-                        case 401: errorMessage += ' 原因: 应用凭证错误 (Unauthorized)。'; break;
-                        case 403: errorMessage += ' 原因: 访问被服务器拒绝，请检查安全设置。'; break;
-                        default: errorMessage += ` 错误代码: ${error.code}。`;
-                    }
-                } else {
-                    errorMessage += ' 请检查网络连接和浏览器控制台信息。';
-                }
-
-                syncStatus.innerHTML = `<i data-lucide="alert-circle"></i> ${errorMessage}`;
+                console.error('同步失败:', error);
+                syncStatus.innerHTML = '<i data-lucide="alert-circle"></i> 同步失败，使用本地数据';
                 syncStatus.className = 'sync-status error';
-                lucide.createIcons();
                 
-                throw error;
+                // 从本地加载
+                records = JSON.parse(localStorage.getItem('compassionRecords') || '[]');
+                displayRecords();
             } finally {
                 syncBtn.classList.remove('loading');
                 setTimeout(() => {
-                    if (syncStatus && syncStatus.className.includes('success')) {
-                        syncStatus.innerHTML = '';
-                        syncStatus.className = 'sync-status';
-                    }
+                    syncStatus.innerHTML = '';
+                    syncStatus.className = 'sync-status';
+                    lucide.createIcons();
                 }, 3000);
             }
         }
 
+        // 保存到云端
         async function saveToCloud(record) {
             try {
                 const CompassionRecord = AV.Object.extend('CompassionRecord');
                 const compassionRecord = new CompassionRecord();
                 
-                // --- PERMISSION FIX ---
-                // Create an Access Control List (ACL) to make the data public.
-                const acl = new AV.ACL();
-                acl.setPublicReadAccess(true);
-                acl.setPublicWriteAccess(true);
-                compassionRecord.setACL(acl);
-                // --- END FIX ---
-                
-                compassionRecord.set('recordId', record.id.toString());
+                compassionRecord.set('recordId', record.id);
                 compassionRecord.set('recordDate', record.date);
                 compassionRecord.set('selfCriticism', record.selfCriticism);
                 compassionRecord.set('emotion', record.emotion);
-                compassionRecord.set('temperature', parseInt(record.temperature, 10));
+                compassionRecord.set('temperature', parseInt(record.temperature));
                 compassionRecord.set('selfCompassion', record.selfCompassion);
                 
                 const savedRecord = await compassionRecord.save();
-                const localRecord = records.find(r => r.id === record.id);
-                if (localRecord) localRecord.cloudId = savedRecord.id;
+                record.cloudId = savedRecord.id;
                 
                 return true;
             } catch (error) {
-                console.error('Failed to save to cloud. Error object:', error);
+                console.error('云端保存失败:', error);
                 return false;
             }
         }
 
-        // --- UI Interaction Functions ---
+        // 添加自定义情绪
+        function addCustomEmotion() {
+            const customInput = document.getElementById('customEmotion');
+            const emotion = customInput.value.trim();
+            
+            if (!emotion) {
+                showToast('请输入情绪名称', 'error');
+                return;
+            }
+            
+            // 检查是否已存在
+            const existingTags = document.querySelectorAll('.emotion-tag');
+            for (let tag of existingTags) {
+                if (tag.dataset.emotion === emotion) {
+                    showToast('这个情绪已经存在了', 'error');
+                    return;
+                }
+            }
+            
+            // 创建新的情绪标签
+            const emotionGrid = document.querySelector('.emotion-grid');
+            const newTag = document.createElement('div');
+            newTag.className = 'emotion-tag custom-emotion';
+            newTag.dataset.emotion = emotion;
+            newTag.textContent = emotion;
+            
+            // 添加点击事件
+            newTag.addEventListener('click', function() {
+                document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedEmotion = this.dataset.emotion;
+            });
+            
+            emotionGrid.appendChild(newTag);
+            customInput.value = '';
+            
+            // 自动选中新添加的情绪
+            document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('selected'));
+            newTag.classList.add('selected');
+            selectedEmotion = emotion;
+            
+            showToast('情绪已添加并选中！', 'success');
+        }
 
-        async function handleFormSubmit(e) {
+        // 情绪选择事件
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('emotion-tag')) {
+                document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('selected'));
+                e.target.classList.add('selected');
+                selectedEmotion = e.target.dataset.emotion;
+            }
+        });
+
+        // 回车键添加自定义情绪
+        document.getElementById('customEmotion').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addCustomEmotion();
+            }
+        });
+
+        // 温度滑块
+        const temperatureSlider = document.getElementById('emotionTemperature');
+        const tempValue = document.getElementById('tempValue');
+        
+        temperatureSlider.addEventListener('input', function() {
+            tempValue.textContent = this.value;
+        });
+
+        // 表单提交
+        document.getElementById('compassionForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const emotionInput = document.getElementById('emotionInput');
-            if (emotionInput.value.trim() === '') {
-                showToast('请输入您的情绪', 'error');
+            if (!selectedEmotion) {
+                showToast('请选择一个情绪', 'error');
                 return;
             }
 
             const saveBtn = document.getElementById('saveBtn');
             const syncStatus = document.getElementById('syncStatus');
             
-            saveBtn.classList.add('loading');
-            syncStatus.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> 保存中...';
-            lucide.createIcons();
-            syncStatus.className = 'sync-status';
-
             try {
+                saveBtn.classList.add('loading');
+                syncStatus.innerHTML = '<i data-lucide="loader-2"></i> 保存中...';
+                syncStatus.className = 'sync-status';
+
                 const record = {
                     id: Date.now(),
                     date: new Date().toLocaleString('zh-CN'),
                     selfCriticism: document.getElementById('selfCriticism').value,
-                    emotion: document.getElementById('emotionInput').value,
-                    temperature: document.getElementById('emotionTemperature').value,
+                    emotion: selectedEmotion,
+                    temperature: temperatureSlider.value,
                     selfCompassion: document.getElementById('selfCompassion').value
                 };
 
+                // 先保存到本地
                 records.unshift(record);
                 localStorage.setItem('compassionRecords', JSON.stringify(records));
-                displayRecords();
                 
+                // 尝试保存到云端
                 const cloudSaved = await saveToCloud(record);
                 
                 if (cloudSaved) {
+                    // 更新本地存储中的cloudId
                     localStorage.setItem('compassionRecords', JSON.stringify(records));
-                    displayRecords();
                     syncStatus.innerHTML = '<i data-lucide="check"></i> 已保存到云端';
                     syncStatus.className = 'sync-status success';
                 } else {
-                    syncStatus.innerHTML = '<i data-lucide="wifi-off"></i> 已存至本地,稍后同步';
+                    syncStatus.innerHTML = '<i data-lucide="wifi-off"></i> 已保存到本地，稍后同步';
                     syncStatus.className = 'sync-status error';
                 }
                 
                 showToast('记录已保存！', 'success');
                 clearForm();
+                displayRecords();
                 
             } catch (error) {
-                console.error('Save failed:', error);
+                console.error('保存失败:', error);
                 showToast('保存失败，请重试', 'error');
                 syncStatus.innerHTML = '<i data-lucide="alert-circle"></i> 保存失败';
                 syncStatus.className = 'sync-status error';
             } finally {
                 saveBtn.classList.remove('loading');
                 setTimeout(() => {
-                    if (syncStatus && syncStatus.className.includes('success')) {
-                        syncStatus.innerHTML = '';
-                        syncStatus.className = 'sync-status';
-                    }
+                    syncStatus.innerHTML = '';
+                    syncStatus.className = 'sync-status';
+                    lucide.createIcons();
                 }, 3000);
             }
-        }
+        });
 
+        // 清空表单
         function clearForm() {
             document.getElementById('compassionForm').reset();
-            document.getElementById('emotionTemperature').value = '5';
+            document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('selected'));
+            // 移除自定义添加的情绪标签
+            document.querySelectorAll('.custom-emotion').forEach(tag => tag.remove());
+            selectedEmotion = '';
+            tempValue.textContent = '5';
         }
 
+        // 显示记录
         function displayRecords() {
             const recordsList = document.getElementById('recordsList');
-            if (!recordsList) return;
             
-            if (!records || records.length === 0) {
+            if (records.length === 0) {
                 recordsList.innerHTML = '<div style="text-align: center; color: #718096; padding: 40px;">还没有记录，开始你的自我关怀之旅吧！</div>';
                 return;
             }
@@ -638,12 +741,12 @@
                 <div class="record-card">
                     <div class="record-header">
                         <div class="record-date">${record.date}</div>
-                        ${record.cloudId ? '<i data-lucide="cloud" style="color: #48bb78; width: 16px; height: 16px;" title="已同步到云端"></i>' : '<i data-lucide="hard-drive" style="color: #718096; width: 16px; height: 16px;" title="仅保存在本地"></i>'}
+                        ${record.cloudId ? '<i data-lucide="cloud" style="color: #48bb78; width: 16px; height: 16px;"></i>' : '<i data-lucide="hard-drive" style="color: #718096; width: 16px; height: 16px;"></i>'}
                     </div>
                     <div class="record-content">
                         <div class="record-left">
                             <div class="record-label">自我批评</div>
-                            <div class="record-text">${record.selfCriticism || ''}</div>
+                            <div class="record-text">${record.selfCriticism}</div>
                             <div class="record-label">情绪与温度</div>
                             <div>
                                 <span class="emotion-display">${record.emotion}</span>
@@ -653,20 +756,18 @@
                         <div class="record-divider"></div>
                         <div class="record-right">
                             <div class="record-label">自我关怀</div>
-                            <div class="record-text">${record.selfCompassion || ''}</div>
+                            <div class="record-text">${record.selfCompassion}</div>
                         </div>
                     </div>
                 </div>
             `).join('');
             
+            // 重新初始化图标
             lucide.createIcons();
         }
 
+        // 下载数据
         function downloadData() {
-            if (records.length === 0) {
-                showToast('没有可导出的数据', 'error');
-                return;
-            }
             const dataStr = JSON.stringify(records, null, 2);
             const dataBlob = new Blob([dataStr], {type: 'application/json'});
             const url = URL.createObjectURL(dataBlob);
@@ -678,9 +779,9 @@
             showToast('数据已导出！', 'success');
         }
 
+        // 显示提示信息
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
-            if (!toast) return;
             toast.textContent = message;
             toast.style.background = type === 'success' ? '#48bb78' : '#f56565';
             toast.classList.add('show');
