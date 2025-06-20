@@ -414,32 +414,53 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        // --- LeanCloud Initialization ---
-        AV.init({
-            appId: 'o1luUdpDLe9Us4aLKd85NyRE-MdYXbMMI',
-            appKey: 'AmDdEqBIHczOw5Sm0trY5Zsi',
-            serverURL: 'https://o1luudpd.api.lncldglobal.com'
-        });
-
         // --- Global Variables ---
         let records = [];
 
         // --- Main Application Logic ---
+        // CORRECTED: Use a reliable polling mechanism to ensure scripts are loaded before execution.
         document.addEventListener('DOMContentLoaded', function() {
-            try {
-                lucide.createIcons();
-                
-                const compassionForm = document.getElementById('compassionForm');
-                if (compassionForm) {
-                    compassionForm.addEventListener('submit', handleFormSubmit);
+            function initializeApp() {
+                // Check if the necessary libraries are loaded.
+                if (typeof AV !== 'undefined' && typeof lucide !== 'undefined') {
+                    console.log("Libraries loaded, initializing application.");
+                    try {
+                        // Initialize LeanCloud SDK
+                        AV.init({
+                            appId: 'o1luUdpDLe9Us4aLKd85NyRE-MdYXbMMI',
+                            appKey: 'AmDdEqBIHczOw5Sm0trY5Zsi',
+                            serverURL: 'https://o1luudpd.api.lncldglobal.com'
+                        });
+
+                        // Initialize icons
+                        lucide.createIcons();
+                        
+                        // Attach event listener to the form
+                        const compassionForm = document.getElementById('compassionForm');
+                        if (compassionForm) {
+                            compassionForm.addEventListener('submit', handleFormSubmit);
+                        }
+
+                        // Load initial data
+                        loadRecords();
+
+                    } catch (error) {
+                        console.error("Critical error during page initialization:", error);
+                        const syncStatus = document.getElementById('syncStatus');
+                        if(syncStatus) {
+                            syncStatus.innerHTML = '<i data-lucide="alert-triangle"></i> 页面初始化失败，请刷新。';
+                            syncStatus.className = 'sync-status error';
+                            // Attempt to render the icon even on error
+                            try { lucide.createIcons(); } catch (e) {}
+                        }
+                    }
+                } else {
+                    // If libraries are not loaded, wait and try again.
+                    console.log("Waiting for external scripts to load...");
+                    setTimeout(initializeApp, 100);
                 }
-
-                loadRecords();
-
-            } catch (error) {
-                console.error("Critical error during page initialization:", error);
-                document.body.innerHTML = '<div style="color: red; padding: 20px; text-align: center; background: white; height: 100vh;">应用程序加载失败，请刷新页面或联系技术支持。</div>';
             }
+            initializeApp();
         });
         
         // --- Data Handling Functions ---
@@ -448,7 +469,8 @@
             try {
                 await syncFromCloud();
             } catch (error) {
-                console.log('Cloud sync failed, loading from local backup:', error);
+                // This catch block will now receive the detailed error from syncFromCloud
+                console.log('Loading from local backup due to sync failure.');
                 records = JSON.parse(localStorage.getItem('compassionRecords') || '[]');
                 displayRecords();
             }
@@ -485,14 +507,37 @@
                 syncStatus.className = 'sync-status success';
                 
             } catch (error) {
-                console.error('Sync failed:', error);
-                syncStatus.innerHTML = '<i data-lucide="alert-circle"></i> 同步失败';
+                // --- ENHANCED ERROR HANDLING ---
+                console.error('数据服务加载失败，详细信息:', error);
+                let errorMessage = '数据服务加载失败。';
+                if (error.code) {
+                    // Provide more specific feedback based on LeanCloud error codes
+                    switch(error.code) {
+                        case -1:
+                            errorMessage += ' 原因: 网络连接超时，请检查网络。';
+                            break;
+                        case 401:
+                            errorMessage += ' 原因: 应用凭证错误 (Unauthorized)。';
+                            break;
+                        case 403:
+                            errorMessage += ' 原因: 访问被服务器拒绝，请检查安全设置。';
+                            break;
+                        default:
+                            errorMessage += ` 错误代码: ${error.code}。`;
+                    }
+                } else {
+                    errorMessage += ' 请检查网络连接和浏览器控制台信息。';
+                }
+
+                syncStatus.innerHTML = `<i data-lucide="alert-circle"></i> ${errorMessage}`;
                 syncStatus.className = 'sync-status error';
-                throw error;
+                lucide.createIcons();
+                
+                throw error; // Propagate the error to be handled by loadRecords' catch block
             } finally {
                 syncBtn.classList.remove('loading');
                 setTimeout(() => {
-                    if (syncStatus && syncStatus.parentElement) {
+                    if (syncStatus && syncStatus.className.includes('success')) {
                         syncStatus.innerHTML = '';
                         syncStatus.className = 'sync-status';
                     }
@@ -560,7 +605,7 @@
                 
                 if (cloudSaved) {
                     localStorage.setItem('compassionRecords', JSON.stringify(records));
-                    displayRecords(); // Refresh to show cloud icon
+                    displayRecords();
                     syncStatus.innerHTML = '<i data-lucide="check"></i> 已保存到云端';
                     syncStatus.className = 'sync-status success';
                 } else {
@@ -579,7 +624,7 @@
             } finally {
                 saveBtn.classList.remove('loading');
                 setTimeout(() => {
-                    if (syncStatus && syncStatus.parentElement) {
+                    if (syncStatus && syncStatus.className.includes('success')) {
                         syncStatus.innerHTML = '';
                         syncStatus.className = 'sync-status';
                     }
@@ -589,7 +634,6 @@
 
         function clearForm() {
             document.getElementById('compassionForm').reset();
-            // Also reset the select to its default value
             document.getElementById('emotionTemperature').value = '5';
         }
 
