@@ -10,7 +10,7 @@
 - 数据导出功能
 
 ## 部署状态
-[![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR-BADGE-ID/deploy-status)](https://app.netlify.com/sites/YOUR-SITE-NAME/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/ca8cfb71-a0f8-401a-920f-8214b5125097/deploy-status)](https://app.netlify.com/sites/self-compassion-tracker/deploys)
 
 ## 使用指南
 1. 记录自我批评的念头
